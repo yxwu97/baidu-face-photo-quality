@@ -106,8 +106,9 @@ Copy-MavenArtifact 'com.fasterxml.jackson.core' 'jackson-annotations' (($jackson
     acceptance = 'development-build-pending-target-sdk-calibration'
 } | ConvertTo-Json | Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $inputDir 'build-info.json')
 $jpackage = Join-Path $Java21Home 'bin/jpackage.exe'
+$icon = Join-Path $PSScriptRoot 'assets/app-icon.ico'
 Invoke-BuildStep $jpackage @('--type', 'app-image', '--name', $name, '--app-version', $appVersion,
-    '--dest', $destination, '--input', $inputDir,
+    '--dest', $destination, '--input', $inputDir, '--icon', $icon,
     '--main-jar', "desktop-$version.jar", '--main-class', 'cn.zhixing.facephoto.desktop.DesktopLauncher',
     '--add-modules', 'java.desktop,java.sql,java.scripting,java.naming,java.xml,jdk.unsupported,jdk.zipfs')
 $workerHome = Join-Path $destination "$name/app/worker"
@@ -119,7 +120,7 @@ if (!$ImageOnly) {
         throw "WiX 3 candle.exe/light.exe unavailable. App image is available at $destination."
     }
     Invoke-BuildStep $jpackage @('--type', 'msi', '--name', $name, '--app-version', $appVersion,
-        '--app-image', (Join-Path $destination $name), '--dest', $destination,
+        '--app-image', (Join-Path $destination $name), '--dest', $destination, '--icon', $icon,
         '--win-per-user-install', '--win-dir-chooser', '--win-menu')
 }
 $release = Join-Path $project 'release'

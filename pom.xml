@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>cn.zhixing.facephoto</groupId>
     <artifactId>face-photo-tool</artifactId>
-    <version>0.2.2026111800003</version>
+    <version>0.2.2026111800004</version>
     <packaging>pom</packaging>
     <name>百度离线人脸照片检测工具</name>
 

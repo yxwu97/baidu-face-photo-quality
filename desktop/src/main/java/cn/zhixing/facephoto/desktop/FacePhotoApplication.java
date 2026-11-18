@@ -6,6 +6,7 @@ import cn.zhixing.facephoto.desktop.worker.ProcessWorker;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ public final class FacePhotoApplication extends Application {
             if (stream != null) version.load(stream);
         }
         stage.setTitle("百度离线人脸照片检测工具 · " + version.getProperty("product.version", ""));
+        stage.getIcons().add(new Image(FacePhotoApplication.class.getResource("app-icon.png").toExternalForm()));
         stage.setScene(new Scene(loader.load(), 1220, 730));
         stage.setMinWidth(960);
         stage.setMinHeight(520);

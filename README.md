@@ -1,6 +1,6 @@
 # 百度离线人脸照片检测工具
 
-Windows x64 离线 JPEG 人脸检测工具，产品版本 **0.2.2026111800003**。
+Windows x64 离线 JPEG 人脸检测工具，产品版本 **0.2.2026111800004**。
 
 已实现批次、SQLite、质量规则、JavaFX 主窗口和四个弹窗、人工复核、CSV 与 Windows 打包。当前电脑已使用百度补发的序列号完成 SDK 联网激活。真实 SDK 处理现场单日 264 张照片，119 张合格、134 张不合格、11 张待复核，检测失败 0 张。现场阈值校准与正式断网验收待完成。
 
@@ -45,6 +45,8 @@ mvn $faceMavenRepo -pl desktop javafx:run
 成功后替换项目固定 release 目录，失败保留已有交付。仅构建应用镜像使用 -ImageOnly。-SkipMaven 适用于已完成同版本验证后的装配。
 
 双击 release/BaiduFacePhotoQuality/BaiduFacePhotoQuality.exe 启动程序。选择抓拍目录并开始检测。选择已有批次的目录会恢复历史，缺少引擎时仍可查看、复核和导出已有结果。默认数据、缓存与轮转日志存放于 %LOCALAPPDATA%/BaiduFacePhotoQuality。
+
+程序窗口、EXE 和安装包统一使用识微朱红通用图标，并添加深色斜带与白色 BD 字样。图标素材和转换说明见 [packaging/assets](packaging/assets/README.md)。
 
 打包默认保留固定 release 目录中的本机授权；首次打包从项目 License 目录装配。可通过 -LicenseDirectory 指定新版授权目录，缺少文件或空文件时中止打包。授权会进入本机 MSI，请仅用于对应设备部署。程序附带独立 Java 11 Worker 运行时和桌面运行时。生产交付须完成授权、现场校准及正式断网验收。
 

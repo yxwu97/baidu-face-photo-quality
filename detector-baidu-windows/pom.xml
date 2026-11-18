@@ -6,7 +6,7 @@
     <parent>
         <groupId>cn.zhixing.facephoto</groupId>
         <artifactId>face-photo-tool</artifactId>
-        <version>0.2.2026111800003</version>
+        <version>0.2.2026111800004</version>
     </parent>
     <artifactId>detector-baidu-windows</artifactId>
 
