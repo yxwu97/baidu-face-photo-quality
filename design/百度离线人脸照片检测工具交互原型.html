@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>百度离线人脸照片检测工具 · 交互原型</title>
+<style>
+  :root {
+    color-scheme: light;
+    --canvas: #f6f7f9;
+    --surface: #fff;
+    --line: #e0e5eb;
+    --soft-line: #edf0f3;
+    --text: #1c2635;
+    --muted: #596575;
+    --accent: #235cb7;
+    --accent-dark: #1a4a98;
+    --accent-light: #edf4ff;
+    --pass: #217454;
+    --reject: #ae3734;
+    --review: #8a580d;
+    --failed: #5e536f;
+    font-family: Inter, "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--text); font-size: 13px; }
+  button, input, select, textarea { font: inherit; }
+  button { color: inherit; cursor: pointer; }
+  button:disabled { cursor: default; opacity: .48; }
+  :focus-visible { outline: 2px solid #3976d4; outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .num { font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); }
+  .icon { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+  .topbar { height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .brand, .top-actions, .button, .nav-button, .source-path, .pager, .run-state, .section-head, .preview-meta, .dialog-actions { display: flex; align-items: center; gap: 8px; }
+  .brand { font-weight: 650; font-size: 14px; gap: 11px; }
+  .brand-icon { width: 30px; height: 30px; border: 1px solid #d9e5f8; border-radius: 7px; background: var(--accent-light); color: var(--accent); display: grid; place-items: center; flex: none; }
+  .brand-icon .icon { width: 19px; height: 19px; }
+  .demo-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-right: 9px; white-space: nowrap; }
+  .demo-tag::before { content: ""; width: 6px; height: 6px; border: 1.5px solid #7b8795; border-radius: 50%; }
+  .button { justify-content: center; min-height: 34px; padding: 0 11px; border: 1px solid #d7dee7; border-radius: 6px; background: #fff; font-weight: 550; white-space: nowrap; }
+  .button:hover:not(:disabled) { background: #f2f5f9; }
+  .button.primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .button.primary:hover:not(:disabled) { background: var(--accent-dark); }
+  .button.plain { background: transparent; border-color: transparent; color: var(--muted); }
+  .button.square { width: 32px; min-height: 30px; padding: 0; }
+  .app { display: grid; grid-template-columns: 190px minmax(0, 1fr); min-height: calc(100vh - 58px); }
+  .sidebar { display: flex; flex-direction: column; background: #f0f2f5; border-right: 1px solid var(--line); padding: 27px 12px 14px; }
+  .side-label { margin: 0 10px 12px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .date-list { display: grid; gap: 3px; }
+  .nav-button { width: 100%; min-height: 36px; padding: 0 9px; border: 1px solid transparent; border-radius: 5px; text-align: left; background: transparent; }
+  .nav-button:hover { background: #e8edf3; }
+  .nav-button[aria-pressed="true"] { color: var(--accent-dark); background: #e4edfc; border-color: #d5e2f8; font-weight: 650; }
+  .nav-button .icon { color: #64748b; }
+  .nav-button[aria-pressed="true"] .icon { color: var(--accent); }
+  .nav-count { margin-left: auto; font-size: 11px; color: var(--muted); }
+  .sidebar-foot { margin-top: auto; padding: 16px 9px 5px; color: var(--muted); display: flex; align-items: center; gap: 7px; font-size: 12px; }
+  main { width: 100%; max-width: 1760px; padding: 23px 24px 18px; min-width: 0; }
+  .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  h1 { margin: 0; font-size: 25px; letter-spacing: -.03em; font-weight: 680; line-height: 1.35; }
+  h2 { margin: 0; font-size: 15px; font-weight: 650; }
+  .source { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+  .source-main { display: flex; align-items: center; gap: 8px; }
+  .source-path { flex: 1; min-width: 0; gap: 9px; color: var(--muted); }
+  .source-path strong { color: var(--text); font-weight: 570; }
+  .source-path > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .source-path .icon { color: var(--accent); width: 19px; height: 19px; }
+  .source-controls { display: flex; gap: 8px; }
+  .run-state { margin-top: 10px; min-height: 16px; color: var(--muted); gap: 9px; font-size: 12px; }
+  .run-text { white-space: nowrap; }
+  .run-count { margin-left: auto; }
+  progress { height: 5px; width: min(260px, 30%); border: 0; border-radius: 6px; background: #e8edf4; overflow: hidden; }
+  progress::-webkit-progress-bar { background: #e8edf4; }
+  progress::-webkit-progress-value { background: var(--accent); }
+  progress::-moz-progress-bar { background: var(--accent); }
+  .run-alert { margin: 10px 0 0; color: var(--reject); font-size: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .stat { display: grid; gap: 6px; background: var(--surface); text-align: left; padding: 9px 12px; min-height: 61px; border: 1px solid var(--line); border-radius: 7px; }
+  .stat:hover { border-color: #aabdda; }
+  .stat[aria-pressed="true"] { border-color: #99b7e7; background: #f2f7ff; }
+  .stat-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .stat-value { font-size: 21px; font-weight: 650; line-height: 1; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+  .all { color: var(--accent); }
+  .pass { color: var(--pass); }
+  .reject { color: var(--reject); }
+  .review { color: var(--review); }
+  .failed { color: var(--failed); }
+  .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(318px, 34%); gap: 14px; align-items: start; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; overflow: hidden; }
+  .section-head { min-height: 44px; justify-content: space-between; padding: 0 13px; border-bottom: 1px solid var(--soft-line); }
+  .section-tools { display: flex; align-items: center; gap: 5px; }
+  .section-tools .button { font-size: 12px; min-height: 29px; }
+  .filters { display: flex; gap: 8px; padding: 10px 12px; }
+  select, input:not([type="checkbox"],[type="file"]), textarea { min-height: 34px; border: 1px solid #d7dee7; border-radius: 5px; color: var(--text); background: #fff; padding: 5px 8px; }
+  .filters select { max-width: 165px; }
+  .search { display: flex; flex: 1; position: relative; min-width: 80px; }
+  .search .icon { position: absolute; left: 8px; top: 9px; color: var(--muted); pointer-events: none; }
+  .search input { width: 100%; min-width: 0; padding-left: 29px !important; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; text-align: left; }
+  th { font-weight: 570; color: var(--muted); background: #f6f8fb; }
+  .results-table { table-layout: fixed; }
+  .results-table th { height: 33px; font-size: 12px; border-top: 1px solid var(--soft-line); border-bottom: 1px solid var(--soft-line); }
+  .results-table th, .results-table td { padding: 0 9px; }
+  .results-table th:first-child, .results-table td:first-child { padding-left: 13px; }
+  .results-table td { height: 52px; border-bottom: 1px solid var(--soft-line); vertical-align: middle; }
+  .results-table tbody tr[data-key] { cursor: pointer; }
+  .results-table tbody tr[data-key]:hover { background: #f7f9fd; }
+  .results-table tbody tr[aria-selected="true"] { background: #edf4ff; }
+  .results-table tbody tr[aria-selected="true"] td:first-child { box-shadow: inset 3px 0 var(--accent); }
+  .thumb { width: 46px; height: 35px; border: 1px solid #dfe5ed; border-radius: 4px; background: #edf0f4; display: grid; place-items: center; color: #6c7889; overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .file { display: block; color: var(--text); text-decoration: none; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; padding: 0; background: none; border: 0; text-align: left; max-width: 100%; font-weight: 580; font-size: 12px; }
+  .file:hover { text-decoration: underline; }
+  .file-date { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .pill .dot { width: 5px; height: 5px; }
+  .pill.pass { background: #eaf6ef; }
+  .pill.reject { background: #faedeb; }
+  .pill.review { background: #fff4de; }
+  .pill.failed { background: #f0edf5; }
+  .reason-line { color: var(--muted); font-size: 12px; }
+  .reason-line, .file-date { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .pager { justify-content: space-between; padding: 8px 12px; font-size: 12px; color: var(--muted); min-height: 45px; }
+  .pager-controls { display: flex; align-items: center; gap: 9px; }
+  .detail-content { padding: 10px 12px 12px; }
+  .preview { display: grid; place-items: center; width: 100%; height: clamp(160px, 23vh, 230px); background: #252e3a; border-radius: 5px; overflow: hidden; }
+  .image-frame { position: relative; height: 100%; max-width: 100%; aspect-ratio: var(--ratio, 4 / 3); }
+  .image-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .face-box { position: absolute; border: 2px solid #9ee6ff; box-shadow: 0 0 0 1px #162f45; }
+  .preview-empty { color: #d7dfe8; }
+  .preview-meta { justify-content: space-between; margin-top: 8px; font-size: 11px; gap: 4px; }
+  .preview-meta label { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+  input[type="checkbox"] { accent-color: var(--accent); margin: 0 3px 0 0; }
+  .detail-outcome { display: flex; align-items: center; gap: 7px; min-height: 30px; margin: 5px 0 2px; }
+  .detail-outcome .reason-line { white-space: normal; overflow: visible; }
+  .metric-table { font-size: 11.5px; table-layout: fixed; }
+  .metric-table th, .metric-table td { padding: 4px 5px; border-bottom: 1px solid var(--soft-line); }
+  .metric-table th { font-weight: 600; }
+  .metric-table td:last-child { color: var(--muted); }
+  .metric-table .metric-alert { color: var(--reject); font-weight: 640; }
+  .metric-table .metric-review { color: var(--review); font-weight: 640; }
+  details { margin-top: 7px; color: var(--muted); font-size: 11px; }
+  summary { font-size: 12px; cursor: pointer; }
+  .record-fields { display: grid; gap: 5px; margin: 6px 0 4px; }
+  .record-fields div { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 4px; }
+  .record-fields dd { margin: 0; overflow-wrap: anywhere; }
+  .review-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 7px; }
+  .review-footer .button { font-size: 12px; min-height: 29px; }
+  .review-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+  .empty { padding: 52px 15px !important; text-align: center; color: var(--muted); }
+  dialog { width: min(470px, calc(100vw - 26px)); padding: 0; border: 1px solid #d1d9e6; border-radius: 9px; color: var(--text); box-shadow: 0 16px 50px #18294126; }
+  dialog::backdrop { background: #15243755; }
+  .dialog-head { min-height: 51px; padding: 0 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--soft-line); }
+  .dialog-body { padding: 14px 16px; display: grid; gap: 12px; }
+  .dialog-body p { margin: 0; color: var(--muted); font-size: 12px; }
+  .dialog-actions { justify-content: flex-end; border-top: 1px solid var(--soft-line); padding: 10px 16px; }
+  .field { display: grid; gap: 5px; }
+  .rule-grid { display: grid; gap: 7px; }
+  .rule-grid label { display: grid; grid-template-columns: minmax(0, 1fr) 90px 43px; align-items: center; gap: 7px; }
+  .rule-grid input { width: 100%; }
+  .dialog-list { max-height: 45vh; overflow: auto; }
+  .dialog-list table td, .dialog-list table th { padding: 7px 8px; border-bottom: 1px solid var(--soft-line); }
+  .toast { position: fixed; bottom: 18px; right: 20px; z-index: 1; padding: 9px 14px; border-radius: 6px; background: #243246; color: white; box-shadow: 0 5px 20px #15243730; }
+  @media (max-width: 1120px) {
+    .app { grid-template-columns: 154px minmax(0, 1fr); }
+    main { padding: 18px 15px; }
+    .sidebar { padding-inline: 8px; }
+    .workspace { gap: 10px; }
+    .results-table th, .results-table td { padding-inline: 6px; }
+  }
+  @media (max-width: 1020px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding: 7px 14px; }
+    .sidebar .side-label, .sidebar-foot { display: none; }
+    .date-list { display: flex; overflow-x: auto; }
+    .nav-button { width: auto; white-space: nowrap; }
+  }
+  @media (max-width: 760px) {
+    .workspace { grid-template-columns: 1fr; }
+    .topbar { padding: 0 12px; }
+    .top-actions .button .action-label { display: none; }
+    .demo-tag { margin-right: 0; }
+    .source-main { flex-wrap: wrap; }
+    .source-path { flex-basis: 100%; }
+    .stat { padding-inline: 6px; }
+    .stat-label { gap: 3px; font-size: 11px; }
+  }
+  @media (max-width: 430px) {
+    .reason-column { width: 0 !important; }
+    .reason-cell { display: none; }
+    .brand { font-size: 12px; gap: 6px; }
+    .brand-icon { display: none; }
+    main { padding-inline: 9px; }
+  }
+</style>
+</head>
+<body>
+<svg aria-hidden="true" width="0" height="0" style="position:absolute">
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M8 4H4v4m12-4h4v4m0 8v4h-4M4 16v4h4m1-9v.1m6-.1v.1m-6 4c1.4 1.3 4.6 1.3 6 0"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4m8-4v4M4 11h16"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v11m-4-4 4 4 4-4M5 16v4h14v-4"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h6m4 0h6M4 12h10m4 0h2M4 18h3m4 0h9"/><circle cx="12" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="5.8"/><path d="m15.3 15.3 4 4"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16M9 15v-4m5 4V7m5 8v-6"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="9.5" r="1.4"/><path d="m4 17 5-4 3 2 4-4 4 4"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+</svg>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-icon"><svg class="icon" aria-hidden="true"><use href="#i-scan"/></svg></span>
+    百度离线人脸照片检测工具
+  </div>
+  <div class="top-actions">
+    <span class="demo-tag" title="原型使用模拟检测数据">演示模式</span>
+    <button class="button plain" id="settings-button" aria-label="检测设置"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span class="action-label">检测设置</span></button>
+  </div>
+</header>
+<div class="app">
+  <aside class="sidebar">
+    <p class="side-label">抓拍日期</p>
+    <nav class="date-list" id="date-list" aria-label="抓拍日期"></nav>
+    <div class="sidebar-foot"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg>本地照片</div>
+  </aside>
+  <main>
+    <div class="page-head">
+      <h1>照片检测</h1>
+      <button class="button" id="export-button"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>导出 CSV</button>
+    </div>
+    <section class="source" aria-label="检测批次">
+      <div class="source-main">
+        <div class="source-path" title="FaceCapture（演示样本）"><svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg><span><strong id="folder-name">FaceCapture</strong><span id="folder-label"> · 演示样本</span></span></div>
+        <div class="source-controls">
+          <button class="button" id="choose-button">选择目录</button>
+          <button class="button primary" id="run-button">重新检测</button>
+        </div>
+      </div>
+      <input type="file" id="folder-input" webkitdirectory multiple hidden>
+      <div class="run-state" role="status"><span class="run-text" id="run-text">检测完成</span><progress id="progress" aria-label="检测进度"></progress><span class="run-count num" id="run-count"></span></div>
+      <p class="run-alert" id="run-alert" role="alert" hidden></p>
+    </section>
+    <section class="stats" id="stats" aria-label="检测结果统计"></section>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="list-heading">
+        <div class="section-head">
+          <h2 id="list-heading">检测结果</h2>
+          <div class="section-tools"><button class="button plain" id="summary-button"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>原因统计</button></div>
+        </div>
+        <div class="filters">
+          <select id="reason-filter" aria-label="检测原因"></select>
+          <label class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input id="query" type="search" aria-label="搜索文件名" placeholder="搜索文件名"></label>
+        </div>
+        <div class="table-wrap">
+          <table class="results-table" aria-label="照片检测结果">
+            <colgroup><col style="width:66px"><col><col style="width:88px"><col class="reason-column" style="width:28%"></colgroup>
+            <thead><tr><th scope="col">照片</th><th scope="col">文件名</th><th scope="col">状态</th><th scope="col" class="reason-cell">原因</th></tr></thead>
+            <tbody id="result-rows"></tbody>
+          </table>
+        </div>
+        <div class="pager num"><span id="range"></span><div class="pager-controls"><button class="button square plain" id="page-prev" aria-label="上一页"><svg class="icon" aria-hidden="true"><use href="#i-left"/></svg></button><span id="page-count"></span><button class="button square plain" id="page-next" aria-label="下一页"><svg class="icon" aria-hidden="true"><use href="#i-right"/></svg></button></div></div>
+      </section>
+      <section class="panel" aria-labelledby="detail-heading">
+        <div class="section-head"><h2 id="detail-heading">照片详情</h2><div class="section-tools"><button class="button square plain" id="photo-prev" aria-label="上一张"><svg class="icon" aria-hidden="true"><use href="#i-left"/></svg></button><button class="button square plain" id="photo-next" aria-label="下一张"><svg class="icon" aria-hidden="true"><use href="#i-right"/></svg></button></div></div>
+        <div id="detail"></div>
+      </section>
+    </div>
+  </main>
+</div>
+<dialog id="settings-dialog" aria-labelledby="settings-title">
+  <form id="settings-form">
+    <div class="dialog-head"><h2 id="settings-title">检测设置</h2><button class="button square plain" type="button" data-close aria-label="关闭"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="dialog-body">
+      <p id="rule-version"></p>
+      <div class="rule-grid" id="rule-fields"></div>
+      <label><input type="checkbox" id="auth-mock"> 模拟授权异常</label>
+    </div>
+    <div class="dialog-actions"><button type="button" class="button" id="reset-rules">恢复默认值</button><button type="submit" class="button primary">应用并重新判定</button></div>
+  </form>
+</dialog>
+<dialog id="review-dialog" aria-labelledby="review-title">
+  <form id="review-form">
+    <div class="dialog-head"><h2 id="review-title">人工复核</h2><button class="button square plain" type="button" data-close aria-label="关闭"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="dialog-body">
+      <p id="review-file"></p>
+      <label class="field">复核结论<select id="review-choice"><option value="">未复核</option><option value="合格">合格</option><option value="不合格">不合格</option><option value="待复核">待复核</option></select></label>
+      <label class="field">备注<textarea id="review-note" rows="3" maxlength="300" placeholder="选填"></textarea></label>
+    </div>
+    <div class="dialog-actions"><button type="button" class="button" data-close>取消</button><button type="submit" class="button primary">保存复核</button></div>
+  </form>
+</dialog>
+<dialog id="summary-dialog" aria-labelledby="summary-title">
+  <div class="dialog-head"><h2 id="summary-title">原因统计</h2><button class="button square plain" type="button" data-close aria-label="关闭"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <div class="dialog-body"><p id="summary-scope"></p><div class="dialog-list" id="summary-body"></div></div>
+</dialog>
+<dialog id="export-dialog" aria-labelledby="export-title">
+  <form id="export-form">
+    <div class="dialog-head"><h2 id="export-title">导出 CSV</h2><button class="button square plain" type="button" data-close aria-label="关闭"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="dialog-body">
+      <label class="field">导出范围<select id="export-scope"><option value="filtered">当前筛选</option><option value="batch">全部已检测</option></select></label>
+      <label class="field">内容<select id="export-type"><option value="details">照片明细</option><option value="dates">按日期汇总</option><option value="reasons">按日期和原因汇总</option></select></label>
+      <p id="export-count"></p>
+    </div>
+    <div class="dialog-actions"><button type="button" class="button" data-close>取消</button><button class="button primary" type="submit">导出</button></div>
+  </form>
+</dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+  "use strict";
+  const element = id => document.getElementById(id);
+  const icon = name => '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"/></svg>';
+  const number = value => value.toLocaleString("zh-CN");
+  const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[character]));
+  const states = { all: "已检测", pass: "合格", reject: "不合格", review: "待复核", failed: "检测失败" };
+  const ruleFields = [
+    { key: "size", label: "人脸宽、高", compare: "≥", unit: "px", min: 1, max: 2000, step: 1, initial: 100 },
+    { key: "pose", label: "姿态角绝对值", compare: "≤", unit: "°", min: 0, max: 180, step: 1, initial: 15 },
+    { key: "blur", label: "模糊度", compare: "≤", min: 0, max: 1, step: .01, initial: .60 },
+    { key: "occlusion", label: "各部位遮挡", compare: "≤", min: 0, max: 1, step: .01, initial: .60 },
+    { key: "light", label: "光照", compare: "≥", min: 0, max: 1, step: .01, initial: .60 }
+  ];
+  const defaultRules = Object.fromEntries(ruleFields.map(field => [field.key, field.initial]));
+  const parts = ["左眼", "右眼", "鼻", "口", "左颊", "右颊", "下巴"];
+  const samples = {
+    "2026-11-17": [
+      ["085300", 95, [215, 151, 251, 320], { pose: [5, 12, 24], blur: .72 }],
+      ["090402", 97, [9, 129, 209, 253], { pose: [28, 7, -3], light: .36 }],
+      ["093441", 96, [52, 105, 238, 301], { light: .72 }],
+      ["095825", 96, [0, 116, 192, 279], { integrity: "edge" }],
+      ["104210", 96, [454, -9, 193, 169], { integrity: "outside", light: .28 }],
+      ["115004", 96, [390, 338, 205, 168], { integrity: "outside", pose: [29, 31, 5] }],
+      ["125025", 95, [16, 171, 201, 245], { light: .68 }],
+      ["134858", 96, [-24, 40, 187, 293], { integrity: "outside" }]
+    ],
+    "2026-11-16": [
+      ["085642", 96, [443, 181, 193, 259], { integrity: "edge", light: .23 }],
+      ["093558", 95, [190, 140, 162, 253], {}],
+      ["103559", 95, [451, 6, 192, 257], { integrity: "outside", light: .29 }],
+      ["115359", 95, [0, 131, 153, 237], { integrity: "edge" }],
+      ["130216", 96, [116, 203, 188, 218], { light: .43 }],
+      ["140446", 58, [40, 184, 153, 202], { occlusion: [.18, .20, .15, .85, .32, .31, .88] }],
+      ["160624", 96, [364, 88, 191, 271], { light: null }],
+      ["181015", 96, null, { error: "SDK_EXCEPTION", stage: "质量测量", reason: "SDK 调用异常" }]
+    ],
+    "2026-11-15": [
+      ["090829", 96, [0, 102, 237, 357], { integrity: "edge", pose: [8, 23, 2] }],
+      ["101526", 65, [[84, 276, 84, 109], [269, 420, 112, 80]], { faces: 2 }],
+      ["111513", 96, [394, 25, 251, 365], { integrity: "outside" }],
+      ["124239", 65, [[5, 96, 180, 198], [394, 303, 112, 117]], { faces: 2 }],
+      ["135023", 94, [[15, 103, 77, 114], [279, 101, 188, 265]], { faces: 2 }],
+      ["145631", 96, null, { faces: 0 }],
+      ["154530", 52, [287, 133, 184, 235], { light: .65 }],
+      ["165246", 95, [294, 0, 172, 214], { integrity: "edge", occlusion: [.81, .76, .08, .13, .15, .12, .20] }]
+    ]
+  };
+  function demoPhotos() {
+    return Object.entries(samples).flatMap(([date, entries]) => entries.map(([time, live, box, values]) => {
+      const name = time + "_未识别_rec0_live" + live + ".jpg";
+      const key = date + "/" + name;
+      return {
+        key, date, name, time: time.match(/../g).join(":"), live, rec: 0, original: "未识别",
+        source: "../FaceCapture/" + date + "/" + encodeURIComponent(name),
+        width: 640, height: 480, boxes: box ? (Array.isArray(box[0]) ? box : [box]) : [],
+        measurement: { faces: 1, integrity: "inside", pose: [5, 7, -2], blur: .31,
+          occlusion: [.12, .11, .08, .15, .13, .16, .17], light: .67, ...values }
+      };
+    }));
+  }
+  const PAGE_SIZE = 6;
+  const app = {
+    files: demoPhotos(), folder: "FaceCapture", mode: "demo", phase: "done", completed: 0,
+    date: "", status: "all", reason: "", query: "", page: 0, selected: "",
+    rules: { ...defaultRules }, revision: 1, authMock: false, showBoxes: true,
+    reviews: new Map(), error: "", runToken: 0
+  };
+  app.completed = app.files.length;
+  app.selected = app.files[1].key;
+  const fixed = value => value == null ? "—" : value.toFixed(2);
+  const metric = (label, value, threshold, tone = "") => ({ label, value, threshold, tone });
+
+  function evaluate(photo, rules = app.rules) {
+    const m = photo.measurement;
+    if (m.error) return { status: "failed", reasons: [m.reason], metrics: [] };
+    if (m.unmeasured) return { status: "review", reasons: ["演示未测量"], metrics: [] };
+
+    const rejected = [];
+    const pending = [];
+    const faces = metric("人脸数量", m.faces + " 张", "1 张", m.faces === 1 ? "" : "alert");
+    const checks = [
+      ["人脸尺寸", "≥ " + rules.size + " px"],
+      ["完整性", "完整入画"],
+      ["姿态", "各 ≤ " + rules.pose + "°"],
+      ["模糊度", "≤ " + fixed(rules.blur)],
+      ["遮挡", "各 ≤ " + fixed(rules.occlusion)],
+      ["光照", "≥ " + fixed(rules.light)]
+    ];
+    if (m.faces !== 1) {
+      return {
+        status: "reject", reasons: [m.faces === 0 ? "未检测到人脸" : "检测到多张人脸"],
+        metrics: [faces, ...checks.map(([label, threshold]) => metric(label, "未执行", threshold))]
+      };
+    }
+
+    const [, , width, height] = photo.boxes[0];
+    const small = width < rules.size || height < rules.size;
+    const outside = m.integrity === "outside";
+    const edge = m.integrity === "edge";
+    const badPose = m.pose.some(value => Math.abs(value) > rules.pose);
+    const blurred = m.blur > rules.blur;
+    const worstOcclusion = Math.max(...m.occlusion);
+    const occluded = worstOcclusion > rules.occlusion;
+    const dark = m.light != null && m.light < rules.light;
+    if (small) rejected.push("人脸太小");
+    if (outside) rejected.push("人脸部分出画");
+    if (badPose) rejected.push("姿态超限");
+    if (blurred) rejected.push("照片模糊");
+    if (occluded) rejected.push("局部遮挡");
+    if (dark) rejected.push("面部偏暗");
+    if (edge) pending.push("人脸贴边");
+    if (m.light == null) pending.push("光照指标缺失");
+    const worstPart = parts[m.occlusion.indexOf(worstOcclusion)];
+    const values = [
+      [width + " × " + height + " px", small ? "alert" : ""],
+      [outside ? "部分出画" : edge ? "贴边" : "完整", outside ? "alert" : edge ? "review" : ""],
+      [m.pose.map(value => value + "°").join(" / "), badPose ? "alert" : ""],
+      [fixed(m.blur), blurred ? "alert" : ""],
+      [worstPart + " " + fixed(worstOcclusion), occluded ? "alert" : ""],
+      [m.light == null ? "缺失" : fixed(m.light), dark ? "alert" : m.light == null ? "review" : ""]
+    ];
+    return {
+      status: rejected.length ? "reject" : pending.length ? "review" : "pass",
+      reasons: [...rejected, ...pending],
+      metrics: [faces, ...checks.map(([label, threshold], index) =>
+        metric(label, values[index][0], threshold, values[index][1]))]
+    };
+  }
+
+  for (const photo of app.files) photo.result = evaluate(photo);
+  const completedPhotos = () => app.files.slice(0, app.completed);
+  const inDate = () => completedPhotos().filter(photo => !app.date || photo.date === app.date);
+  const filtered = () => inDate().filter(photo => (
+    (app.status === "all" || photo.result.status === app.status) &&
+    (!app.reason || photo.result.reasons.includes(app.reason)) &&
+    (!app.query || photo.key.toLowerCase().includes(app.query))
+  ));
+  const reasonCounts = photos => {
+    const counts = new Map();
+    for (const photo of photos) {
+      for (const reason of photo.result.reasons) counts.set(reason, (counts.get(reason) ?? 0) + 1);
+    }
+    return [...counts].sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0], "zh-CN"));
+  };
+  const statusCounts = photos => {
+    const counts = { all: photos.length, pass: 0, reject: 0, review: 0, failed: 0 };
+    for (const photo of photos) counts[photo.result.status]++;
+    return counts;
+  };
+  const badge = status => '<span class="pill ' + status + '"><span class="dot"></span>' + states[status] + '</span>';
+
+  function renderDates() {
+    const dates = new Map([["", app.files.length]]);
+    for (const photo of app.files) dates.set(photo.date, (dates.get(photo.date) ?? 0) + 1);
+    element("date-list").innerHTML = [...dates].map(([date, count]) =>
+      '<button class="nav-button num" data-date="' + escapeHTML(date) + '" aria-pressed="' + (date === app.date) + '">' +
+      icon(date ? "calendar" : "folder") + escapeHTML(date || "全部日期") +
+      '<span class="nav-count">' + number(count) + '</span></button>').join("");
+  }
+
+  function renderBatch() {
+    const labels = { ready: "等待检测", running: "检测中", paused: "已取消，可继续", done: "检测完成", blocked: "检测暂停" };
+    const actions = { ready: "开始检测", running: "取消检测", paused: "继续检测", done: "重新检测", blocked: "重试检测" };
+    element("folder-name").textContent = app.folder;
+    element("folder-label").textContent = app.mode === "demo" ? " · 演示样本" : "";
+    element("folder-name").closest(".source-path").title = app.folder;
+    element("run-text").textContent = labels[app.phase];
+    element("run-button").textContent = actions[app.phase];
+    element("choose-button").disabled = app.phase === "running";
+    element("run-button").disabled = !app.files.length;
+    element("progress").max = app.files.length || 1;
+    element("progress").value = app.completed;
+    element("run-count").textContent = number(app.completed) + " / " + number(app.files.length) + " 张";
+    element("run-alert").hidden = !app.error;
+    element("run-alert").textContent = app.error;
+  }
+
+  function renderFilters() {
+    const photos = inDate();
+    const counts = statusCounts(photos);
+    element("stats").innerHTML = Object.entries(states).map(([status, label]) =>
+      '<button class="stat" data-status="' + status + '" aria-pressed="' + (status === app.status) + '">' +
+      '<span class="stat-label"><span class="dot ' + status + '"></span>' + label + '</span>' +
+      '<span class="stat-value num ' + status + '">' + number(counts[status]) + '</span></button>').join("");
+    const reasons = reasonCounts(photos).map(([reason]) => reason);
+    if (app.reason && !reasons.includes(app.reason)) reasons.push(app.reason);
+    element("reason-filter").innerHTML = '<option value="">全部原因</option>' + reasons.map(reason =>
+      '<option value="' + escapeHTML(reason) + '">' + escapeHTML(reason) + '</option>').join("");
+    element("reason-filter").value = app.reason;
+    element("summary-button").disabled = !photos.length;
+    element("export-button").disabled = !app.completed;
+  }
+
+  function renderResults() {
+    const photos = filtered();
+    const pages = Math.max(1, Math.ceil(photos.length / PAGE_SIZE));
+    app.page = Math.min(app.page, pages - 1);
+    const start = app.page * PAGE_SIZE;
+    const visible = photos.slice(start, start + PAGE_SIZE);
+    if (!visible.some(photo => photo.key === app.selected)) app.selected = visible[0]?.key ?? "";
+    const rows = visible.map(photo => {
+      const { key, date, name, time, source, result } = photo;
+      const reason = result.reasons.join("、") || "—";
+      const safeKey = escapeHTML(key);
+      const thumb = source ? '<img src="' + escapeHTML(source) + '" alt="" draggable="false">' : icon("image");
+      return '<tr data-key="' + safeKey + '" aria-selected="' + (key === app.selected) + '">' +
+        '<td><span class="thumb">' + thumb + '</span></td><td><button type="button" class="file num" title="' +
+        escapeHTML(name) + '">' + escapeHTML(name) + '</button><span class="file-date num">' +
+        escapeHTML(date + (time ? " " + time : "")) + '</span></td><td>' + badge(result.status) +
+        '</td><td class="reason-line reason-cell" title="' + escapeHTML(reason) + '">' + escapeHTML(reason) + '</td></tr>';
+    });
+    const emptyText = app.completed ? "没有符合筛选条件的照片" : "暂无检测结果";
+    element("result-rows").innerHTML = rows.join("") || '<tr><td class="empty" colspan="4">' + emptyText + '</td></tr>';
+    element("range").textContent = visible.length ?
+      number(start + 1) + "–" + number(start + visible.length) + " / " + number(photos.length) + " 张" : "0 张";
+    element("page-count").textContent = (app.page + 1) + " / " + pages;
+    element("page-prev").disabled = app.page === 0;
+    element("page-next").disabled = app.page >= pages - 1;
+    renderDetail(photos);
+  }
+
+  let lastDetail = null;
+  function renderDetail(photos, force = false) {
+    const index = photos.findIndex(photo => photo.key === app.selected);
+    const photo = photos[index];
+    element("photo-prev").disabled = index <= 0;
+    element("photo-next").disabled = index < 0 || index >= photos.length - 1;
+    if (!force && lastDetail === photo?.result) return;
+    lastDetail = photo?.result;
+    if (!photo) {
+      element("detail").innerHTML = '<div class="empty">选择一张照片</div>';
+      return;
+    }
+    const record = app.reviews.get(photo.key);
+    const result = photo.result;
+    const shape = photo.width && photo.height ? photo.width + " × " + photo.height + " px" : "—";
+    const boxes = photo.boxes.map(([x, y, width, height]) =>
+      '<span class="face-box" aria-hidden="true"' + (app.showBoxes ? "" : " hidden") +
+      ' style="left:' + 100 * x / photo.width + '%;top:' + 100 * y / photo.height +
+      '%;width:' + 100 * width / photo.width + '%;height:' + 100 * height / photo.height + '%"></span>').join("");
+    const frame = photo.source ?
+      '<div class="image-frame" style="--ratio:' + (photo.width || 640) + ' / ' + (photo.height || 480) +
+      '"><img src="' + escapeHTML(photo.source) + '" alt="抓拍原图" draggable="false">' + boxes + '</div>' :
+      '<span class="preview-empty">无法预览</span>';
+    const metrics = result.metrics.map(row => '<tr><td>' + escapeHTML(row.label) +
+      '</td><td class="metric-' + row.tone + '">' + escapeHTML(row.value) +
+      '</td><td>' + escapeHTML(row.threshold) + '</td></tr>').join("");
+    const m = photo.measurement;
+    const occlusion = m.faces === 1 && m.occlusion ? '<div><dt>各部位遮挡</dt><dd>' +
+      parts.map((part, i) => part + " " + fixed(m.occlusion[i])).join(" · ") + '</dd></div>' : "";
+    const error = m.error ? '<div><dt>失败阶段</dt><dd>' + escapeHTML(m.stage) +
+      '</dd></div><div><dt>错误码</dt><dd>' + escapeHTML(m.error) + '</dd></div>' : "";
+    const note = record ? [record.choice, record.note].filter(Boolean).join(" · ") : "";
+    element("detail").innerHTML = '<div class="detail-content"><div class="preview">' + frame +
+      '</div><div class="preview-meta muted num"><span>' + shape +
+      '</span><label><input type="checkbox" id="box-toggle"' + (app.showBoxes ? ' checked' : '') +
+      (photo.boxes.length ? '' : ' disabled') + '>显示人脸框</label></div>' +
+      '<div class="detail-outcome">' + badge(result.status) + '<span class="reason-line">' +
+      escapeHTML(result.reasons.join("、")) + '</span></div>' +
+      (metrics ? '<table class="metric-table num"><colgroup><col style="width:29%"><col style="width:39%"><col></colgroup>' +
+        '<thead><tr><th scope="col">检测项</th><th scope="col">测量值</th><th scope="col">阈值</th></tr></thead><tbody>' +
+        metrics + '</tbody></table>' : '') +
+      '<details><summary>抓拍记录' + (error || occlusion ? "与明细" : "") +
+      '</summary><dl class="record-fields num"><div><dt>相对路径</dt><dd>' + escapeHTML(photo.key) +
+      '</dd></div><div><dt>原始记录</dt><dd>' + (photo.original ? escapeHTML(photo.original + " · rec " + photo.rec + " · live " + photo.live) : "—") +
+      '</dd></div><div><dt>规则版本</dt><dd>演示 R' + app.revision +
+      '</dd></div>' + (m.pose && m.faces === 1 ? '<div><dt>姿态顺序</dt><dd>左右偏转 / 俯仰 / 倾斜</dd></div>' : '') +
+      occlusion + error + '</dl></details><div class="review-footer"><span class="review-note muted" title="' +
+      escapeHTML(note) + '">' + (note ? "复核 · " + escapeHTML(note) : "未人工复核") +
+      '</span><button type="button" class="button" id="review-button">人工复核</button></div></div>';
+  }
+
+  function renderRun() {
+    renderBatch();
+    renderFilters();
+    renderResults();
+  }
+  function updateFilter() {
+    app.page = 0;
+    renderResults();
+  }
+
+  element("date-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-date]");
+    if (!button) return;
+    app.date = button.dataset.date;
+    app.reason = "";
+    renderDates();
+    element("date-list").querySelector('[aria-pressed="true"]').focus();
+    renderFilters();
+    updateFilter();
+  });
+  element("stats").addEventListener("click", event => {
+    const button = event.target.closest("[data-status]");
+    if (!button) return;
+    app.status = button.dataset.status;
+    renderFilters();
+    element("stats").querySelector('[aria-pressed="true"]').focus();
+    updateFilter();
+  });
+  element("reason-filter").addEventListener("change", event => {
+    app.reason = event.target.value;
+    updateFilter();
+  });
+  element("query").addEventListener("input", event => {
+    app.query = event.target.value.trim().toLowerCase();
+    updateFilter();
+  });
+  element("result-rows").addEventListener("click", event => {
+    const row = event.target.closest("[data-key]");
+    if (!row || row.dataset.key === app.selected) return;
+    element("result-rows").querySelector('[aria-selected="true"]')?.setAttribute("aria-selected", "false");
+    app.selected = row.dataset.key;
+    row.setAttribute("aria-selected", "true");
+    renderDetail(filtered());
+  });
+  function movePage(step) {
+    app.page += step;
+    renderResults();
+  }
+  function movePhoto(step) {
+    const photos = filtered();
+    const current = photos.findIndex(photo => photo.key === app.selected);
+    const target = photos[current + step];
+    if (!target) return;
+    app.selected = target.key;
+    app.page = Math.floor((current + step) / PAGE_SIZE);
+    renderResults();
+  }
+  element("page-prev").onclick = () => movePage(-1);
+  element("page-next").onclick = () => movePage(1);
+  element("photo-prev").onclick = () => movePhoto(-1);
+  element("photo-next").onclick = () => movePhoto(1);
+
+  const demoReviewKey = "face-quality-prototype.demo-reviews.v1";
+  try {
+    app.reviews = new Map(JSON.parse(localStorage.getItem(demoReviewKey) || "[]"));
+  } catch {
+    app.reviews = new Map();
+  }
+  let reviewTarget = "";
+  element("detail").addEventListener("click", event => {
+    if (!event.target.closest("#review-button")) return;
+    const photo = filtered().find(item => item.key === app.selected);
+    if (!photo) return;
+    const current = app.reviews.get(photo.key);
+    reviewTarget = photo.key;
+    element("review-file").textContent = photo.name;
+    element("review-choice").value = current?.choice ?? "";
+    element("review-note").value = current?.note ?? "";
+    element("review-dialog").showModal();
+  });
+  element("detail").addEventListener("change", event => {
+    if (event.target.id !== "box-toggle") return;
+    app.showBoxes = event.target.checked;
+    for (const box of element("detail").querySelectorAll(".face-box")) box.hidden = !app.showBoxes;
+  });
+  element("review-form").addEventListener("submit", event => {
+    event.preventDefault();
+    const choice = element("review-choice").value;
+    const note = element("review-note").value.trim();
+    if (choice || note) app.reviews.set(reviewTarget, { choice, note });
+    else app.reviews.delete(reviewTarget);
+    if (app.mode === "demo") {
+      try {
+        localStorage.setItem(demoReviewKey, JSON.stringify([...app.reviews]));
+      } catch {
+        // Review remains in memory if storage is disabled.
+      }
+    }
+    element("review-dialog").close();
+    renderDetail(filtered(), true);
+    element("review-button")?.focus();
+    toast(choice || note ? "已保存复核" : "已清除复核");
+  });
+
+  element("rule-fields").innerHTML = ruleFields.map(field =>
+    '<label><span>' + field.label + ' ' + field.compare + '</span><input id="rule-' + field.key +
+    '" type="number" required min="' + field.min + '" max="' + field.max + '" step="' + field.step +
+    '" aria-label="' + field.label + '"><span class="muted">' + (field.unit ?? "") + '</span></label>').join("");
+  function fillRules(rules) {
+    for (const field of ruleFields) element("rule-" + field.key).value = rules[field.key];
+  }
+  element("settings-button").onclick = () => {
+    fillRules(app.rules);
+    element("rule-version").textContent = "规则版本 R" + app.revision + " · 试跑阈值";
+    element("auth-mock").checked = app.authMock;
+    element("settings-dialog").showModal();
+  };
+  element("reset-rules").onclick = () => fillRules(defaultRules);
+  element("settings-form").addEventListener("submit", event => {
+    event.preventDefault();
+    const rules = Object.fromEntries(ruleFields.map(field => [field.key, element("rule-" + field.key).valueAsNumber]));
+    const changed = ruleFields.some(field => rules[field.key] !== app.rules[field.key]);
+    app.authMock = element("auth-mock").checked;
+    element("settings-dialog").close();
+    if (!changed) return;
+    app.rules = rules;
+    app.revision++;
+    for (const photo of completedPhotos()) photo.result = evaluate(photo);
+    renderRun();
+    toast("已按 R" + app.revision + " 重新判定");
+  });
+
+  function groupDates(photos) {
+    const groups = new Map();
+    for (const photo of photos) {
+      if (!groups.has(photo.date)) groups.set(photo.date, []);
+      groups.get(photo.date).push(photo);
+    }
+    return groups;
+  }
+  element("summary-button").onclick = () => {
+    const photos = inDate();
+    element("summary-scope").textContent = (app.date || "全部日期") + " · " + number(photos.length) + " 张 · 一张照片可命中多项";
+    const reasons = reasonCounts(photos);
+    element("summary-body").innerHTML = reasons.length ?
+      '<table class="num"><thead><tr><th scope="col">原因</th><th scope="col">命中张数</th></tr></thead><tbody>' +
+      reasons.map(([reason, count]) => '<tr><td>' + escapeHTML(reason) + '</td><td>' + number(count) + '</td></tr>').join("") +
+      '</tbody></table>' : '<p>无异常原因</p>';
+    element("summary-dialog").showModal();
+  };
+
+  const exportPhotos = () => element("export-scope").value === "batch" ? completedPhotos() : filtered();
+  function updateExport() {
+    const size = exportPhotos().length;
+    element("export-count").textContent = number(size) + " 张 · UTF-8 · 演示数据";
+    element("export-form").querySelector('[type="submit"]').disabled = !size;
+  }
+  element("export-button").onclick = () => {
+    element("export-scope").value = "filtered";
+    element("export-type").value = "details";
+    updateExport();
+    element("export-dialog").showModal();
+  };
+  element("export-scope").onchange = updateExport;
+  function exportRows(photos, type) {
+    const groups = groupDates(photos);
+    if (type === "dates") {
+      return [["日期", "已检测", "合格", "不合格", "待复核", "检测失败", "数据来源"],
+        ...[...groups].map(([date, items]) => [date, ...Object.values(statusCounts(items)), "原型演示"])];
+    }
+    if (type === "reasons") {
+      return [["日期", "原因", "命中张数", "数据来源"], ...[...groups].flatMap(([date, items]) => {
+        const reasons = reasonCounts(items);
+        return reasons.length ? reasons.map(([reason, count]) => [date, reason, count, "原型演示"]) :
+          [[date, "无异常原因", 0, "原型演示"]];
+      })];
+    }
+    return [["相对路径", "日期", "原图宽", "原图高", "原始状态", "rec", "live", "检测结果", "原因",
+      "人脸数量", "人脸框坐标", "左右偏转", "俯仰", "倾斜", "模糊度",
+      ...parts.map(part => part + "遮挡"), "光照", "完整性", "规则版本", "规则阈值", "SDK", "失败阶段", "异常码", "人工复核", "复核备注"],
+      ...photos.map(photo => {
+        const m = photo.measurement;
+        const review = app.reviews.get(photo.key);
+        const measured = m.faces === 1 && !m.error;
+        const thresholds = ruleFields.map(field =>
+          field.label + field.compare + app.rules[field.key] + (field.unit ?? "")).join(" / ");
+        return [photo.key, photo.date, photo.width, photo.height, photo.original, photo.rec, photo.live,
+          states[photo.result.status], photo.result.reasons.join("、"), m.error ? "" : m.faces, JSON.stringify(photo.boxes),
+          ...(measured ? m.pose : ["", "", ""]), measured ? m.blur : "",
+          ...(measured ? m.occlusion : parts.map(() => "")), measured ? m.light : "",
+          measured ? ({ inside: "完整", edge: "贴边", outside: "部分出画" })[m.integrity] : "",
+          "演示 R" + app.revision, thresholds, "演示（SDK 未接入）", m.stage, m.error, review?.choice, review?.note];
+      })];
+  }
+  function csvCell(value) {
+    let text = String(value ?? "");
+    if (typeof value === "string" && /^\s*[=+\-@\t\r\n]/.test(text)) text = "'" + text;
+    return '"' + text.replaceAll('"', '""') + '"';
+  }
+  element("export-form").addEventListener("submit", event => {
+    event.preventDefault();
+    const photos = exportPhotos();
+    if (!photos.length) return;
+    const type = element("export-type").value;
+    const rows = exportRows(photos, type);
+    const csv = "\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    const names = { details: "照片明细", dates: "按日期汇总", reasons: "按日期和原因汇总" };
+    link.download = "演示_" + names[type] + ".csv";
+    link.href = url;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    element("export-dialog").close();
+    toast("已发起 CSV 下载");
+  });
+  for (const button of document.querySelectorAll("[data-close]")) {
+    button.onclick = () => button.closest("dialog").close();
+  }
+
+  let toastTimer;
+  function toast(message) {
+    clearTimeout(toastTimer);
+    element("toast").textContent = message;
+    element("toast").hidden = false;
+    toastTimer = setTimeout(() => { element("toast").hidden = true; }, 2300);
+  }
+  element("choose-button").onclick = () => element("folder-input").click();
+  element("folder-input").addEventListener("change", event => {
+    const files = [...event.target.files];
+    event.target.value = "";
+    if (!files.length) return;
+    for (const previous of app.files) {
+      if (previous.file && previous.source) URL.revokeObjectURL(previous.source);
+    }
+    app.mode = "folder";
+    app.folder = files[0].webkitRelativePath.split("/")[0] || "所选目录";
+    app.files = files.filter(file => /\.jpe?g$/i.test(file.name)).map(file => {
+      const key = file.webkitRelativePath.split("/").slice(1).join("/") || file.name;
+      const folders = [app.folder, ...key.split("/").slice(0, -1)];
+      const date = folders.find(part => /^\d{4}-\d{2}-\d{2}$/.test(part)) || "无日期";
+      const record = file.name.match(/^(\d{2})(\d{2})(\d{2})_(.+)_rec(\d+)_live(\d+)\.jpe?g$/i);
+      return { key, date, file, name: file.name, time: record?.slice(1, 4).join(":"),
+        original: record?.[4], rec: record?.[5], live: record?.[6], boxes: [] };
+    }).sort((first, second) => second.date.localeCompare(first.date) || first.key.localeCompare(second.key, "zh-CN"));
+    Object.assign(app, { phase: "ready", completed: 0, date: "", status: "all", reason: "", query: "",
+      page: 0, selected: "", reviews: new Map(), error: app.files.length ? "" : "所选目录没有 JPEG 照片。" });
+    element("query").value = "";
+    renderDates();
+    renderRun();
+  });
+
+  async function decodePhoto(photo) {
+    try {
+      const image = await createImageBitmap(photo.file);
+      photo.width = image.width;
+      photo.height = image.height;
+      image.close();
+      photo.source = URL.createObjectURL(photo.file);
+      photo.measurement = { unmeasured: true };
+    } catch {
+      photo.measurement = { error: "JPEG_DECODE", stage: "读图", reason: "照片解码失败" };
+    }
+  }
+  function loadPhoto(photo) {
+    if (!photo.file || photo.measurement) return;
+    photo.loading ??= decodePhoto(photo);
+    return photo.loading;
+  }
+  async function advanceBatch(token) {
+    if (token !== app.runToken) return;
+    const step = app.mode === "demo" ? 1 : 12;
+    const end = Math.min(app.completed + step, app.files.length);
+    const photos = app.files.slice(app.completed, end);
+    await Promise.all(photos.map(loadPhoto));
+    if (token !== app.runToken) {
+      // A replaced batch no longer owns any newly created image URLs.
+      if (!app.files.includes(photos[0])) {
+        for (const photo of photos) if (photo.source) URL.revokeObjectURL(photo.source);
+      }
+      return;
+    }
+    for (const photo of photos) photo.result = evaluate(photo);
+    app.completed = end;
+    if (end === app.files.length) app.phase = "done";
+    renderRun();
+    if (app.phase === "running") setTimeout(() => advanceBatch(token), app.mode === "demo" ? 240 : 25);
+  }
+  element("run-button").onclick = () => {
+    const token = ++app.runToken;
+    if (app.phase === "running") {
+      app.phase = "paused";
+      renderBatch();
+      return;
+    }
+    if (app.authMock) {
+      app.phase = "blocked";
+      app.error = "模拟授权异常（-1022）。请检查检测设置后重试。";
+      renderBatch();
+      return;
+    }
+    app.error = "";
+    if (app.completed === app.files.length) {
+      app.completed = 0;
+      app.page = 0;
+    }
+    app.phase = "running";
+    renderRun();
+    setTimeout(() => advanceBatch(token), 250);
+  };
+
+  renderDates();
+  renderRun();
+</script>
+</body>
+</html>

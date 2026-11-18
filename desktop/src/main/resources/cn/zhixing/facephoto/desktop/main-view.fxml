@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="cn.zhixing.facephoto.desktop.MainController" stylesheets="@main-view.css">
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="topbar">
+            <Label text="百度离线人脸照片检测工具" styleClass="app-name"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="检测设置" onAction="#openSettings" fx:id="settingsButton"/>
+        </HBox>
+    </top>
+    <left>
+        <VBox spacing="10" prefWidth="156" minWidth="126" styleClass="sidebar">
+            <Label text="抓拍日期" styleClass="muted"/>
+            <ListView fx:id="dateList" VBox.vgrow="ALWAYS" accessibleText="抓拍日期"/>
+        </VBox>
+    </left>
+    <center>
+        <VBox styleClass="main" spacing="12">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="照片检测" styleClass="page-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="导出 CSV" fx:id="exportButton" onAction="#openExport"/>
+            </HBox>
+            <VBox styleClass="panel" spacing="8">
+                <HBox alignment="CENTER_LEFT" spacing="9">
+                    <Label fx:id="rootLabel" text="未选择目录" minWidth="0" maxWidth="Infinity"
+                           HBox.hgrow="ALWAYS" textOverrun="CENTER_ELLIPSIS"/>
+                    <Button text="选择目录" fx:id="directoryButton" onAction="#chooseDirectory"/>
+                    <Button text="开始检测" fx:id="batchButton" onAction="#performBatchAction"
+                            styleClass="primary"/>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="9">
+                    <ProgressBar fx:id="progress" progress="0" minWidth="60" maxWidth="Infinity"
+                                 HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="progressLabel"/>
+                </HBox>
+                <Label fx:id="statusLabel" text="请选择抓拍目录" wrapText="true" styleClass="muted"/>
+            </VBox>
+            <HBox fx:id="stateCards" spacing="7" fillHeight="true"/>
+            <VBox styleClass="panel" spacing="8" VBox.vgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT" spacing="7">
+                    <Label text="检测结果" styleClass="section-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <ComboBox fx:id="reasonBox" accessibleText="原因筛选" prefWidth="120"/>
+                    <TextField fx:id="search" promptText="搜索文件名" accessibleText="搜索文件名"
+                               prefColumnCount="9" minWidth="70" maxWidth="155"/>
+                </HBox>
+                <TableView fx:id="table" VBox.vgrow="ALWAYS" fixedCellSize="50">
+                    <placeholder><Label text="暂无检测结果"/></placeholder>
+                    <columns>
+                        <TableColumn fx:id="pictureColumn" text="照片" minWidth="60" maxWidth="69"/>
+                        <TableColumn fx:id="nameColumn" text="文件名" minWidth="110"/>
+                        <TableColumn fx:id="stateColumn" text="状态" minWidth="70" maxWidth="88"/>
+                        <TableColumn fx:id="reasonColumn" text="原因" minWidth="90"/>
+                    </columns>
+                </TableView>
+                <HBox alignment="CENTER_LEFT" spacing="7">
+                    <Button text="原因统计" fx:id="reasonButton" onAction="#openReasons"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="上一页" fx:id="pageBack" onAction="#previousPage"/>
+                    <Label fx:id="pageLabel" text="0 页" styleClass="muted"/>
+                    <Button text="下一页" fx:id="pageForward" onAction="#nextPage"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </center>
+    <right>
+        <VBox styleClass="detail" spacing="10" prefWidth="355" minWidth="238">
+            <HBox alignment="CENTER_LEFT" spacing="7">
+                <Label text="照片详情" styleClass="section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="上一张" fx:id="photoBack" onAction="#previousPhoto"/>
+                <Button text="下一张" fx:id="photoForward" onAction="#nextPhoto"/>
+            </HBox>
+            <StackPane fx:id="previewArea" styleClass="preview" prefHeight="231" minHeight="130">
+                <ImageView fx:id="preview" smooth="true" preserveRatio="true"/>
+                <Canvas fx:id="overlay" mouseTransparent="true"/>
+                <Label fx:id="previewMessage" text="暂无原图" styleClass="preview-message"/>
+            </StackPane>
+            <HBox spacing="7" alignment="CENTER_LEFT">
+                <CheckBox fx:id="showBoxes" text="显示人脸框" selected="true"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="dimensions" styleClass="muted"/>
+            </HBox>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="detail-scroll">
+                <VBox fx:id="details" spacing="9">
+                    <Label fx:id="resultTitle" styleClass="section-title" wrapText="true"/>
+                    <Label fx:id="reasonText" wrapText="true"/>
+                    <GridPane fx:id="metricTable" hgap="8" vgap="6" styleClass="metrics"/>
+                    <TitledPane fx:id="capturePane" text="抓拍记录" expanded="false">
+                        <Label fx:id="captureText" wrapText="true"/>
+                    </TitledPane>
+                </VBox>
+            </ScrollPane>
+            <HBox alignment="CENTER_LEFT" spacing="7">
+                <Label fx:id="reviewText" text="未复核" wrapText="true" minWidth="0"
+                       maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="reviewButton" text="人工复核" onAction="#openReview"/>
+            </HBox>
+        </VBox>
+    </right>
+</BorderPane>

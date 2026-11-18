@@ -1,0 +1,62 @@
+.root {
+    -fx-font-family: "Microsoft YaHei UI";
+    -fx-font-size: 13px;
+    -fx-background-color: #f4f6f9;
+}
+.label { -fx-text-fill: #192637; }
+.muted { -fx-text-fill: #5e6c7b; }
+.topbar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #dce3eb transparent;
+    -fx-padding: 10px 16px;
+}
+.app-name { -fx-font-size: 16px; -fx-font-weight: bold; }
+.page-title { -fx-font-size: 23px; -fx-font-weight: bold; }
+.section-title { -fx-font-size: 15px; -fx-font-weight: bold; }
+.sidebar {
+    -fx-background-color: #edf1f6;
+    -fx-padding: 14px 9px;
+    -fx-border-color: transparent #dce3eb transparent transparent;
+}
+.sidebar .list-view { -fx-background-color: transparent; }
+.sidebar .list-cell { -fx-background-color: transparent; -fx-padding: 8px 3px; }
+.sidebar .list-cell:selected { -fx-background-color: #dbe8fa; -fx-background-radius: 5px; }
+.main { -fx-padding: 12px; }
+.panel, .detail {
+    -fx-background-color: white;
+    -fx-border-color: #dce3eb;
+    -fx-background-radius: 7px;
+    -fx-border-radius: 7px;
+    -fx-padding: 10px;
+}
+.detail { -fx-padding: 13px 11px; }
+.preview { -fx-background-color: #edf1f5; -fx-background-radius: 5px; }
+.preview-message { -fx-text-fill: #536478; -fx-background-color: #edf1f5df; -fx-padding: 5px 8px; }
+.detail-scroll, .detail-scroll > .viewport { -fx-background-color: white; }
+.metrics { -fx-padding: 4px 0; }
+.metrics .label { -fx-wrap-text: true; }
+.metric-heading { -fx-font-weight: bold; -fx-text-fill: #536478; }
+.button, .combo-box, .text-field {
+    -fx-background-color: white;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-border-color: #cfd8e3;
+}
+.button:hover { -fx-background-color: #edf4fd; }
+.button:focused, .combo-box:focused, .text-field:focused, .table-view:focused, .list-view:focused {
+    -fx-border-color: #2966b6;
+}
+.primary { -fx-background-color: #215fae; -fx-text-fill: white; -fx-border-color: #215fae; }
+.primary:hover { -fx-background-color: #174d91; }
+.state-card { -fx-padding: 7px 4px; -fx-text-alignment: center; }
+.card-count { -fx-font-size: 22px; -fx-font-weight: bold; }
+.state-card:selected { -fx-background-color: #e5effc; -fx-border-color: #4c7db9; }
+.status-pass { -fx-text-fill: #176705; }
+.status-fail { -fx-text-fill: #a82c25; }
+.status-review { -fx-text-fill: #855100; }
+.status-error { -fx-text-fill: #625274; }
+.table-view { -fx-border-color: #e2e8ef; -fx-background-color: white; }
+.table-view .column-header-background { -fx-background-color: #f4f7fa; }
+.table-view .column-header { -fx-background-color: transparent; }
+.table-view .table-row-cell:selected { -fx-background-color: #dfebfc; }
+.table-view .table-row-cell:selected .table-cell { -fx-text-fill: #182536; }

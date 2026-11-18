@@ -1,0 +1,20 @@
+target/
+.idea/
+.vscode/
+*.iml
+FaceCapture/
+*.zip
+*.rar
+license/
+license.ini
+license.key
+.local/
+license2/
+
+# Local deployment packages contain machine-bound SDK authorization.
+/release/
+/License/
+/License2/
+
+# Field calibration metadata is private; generate it locally when needed.
+/design/calibration-seed.csv
